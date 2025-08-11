@@ -61,7 +61,10 @@ const Testimonial: React.FC<TestimonialProps> = ({
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 target.style.display = 'none';
-                target.nextElementSibling!.style.display = 'flex';
+                const sibling = target.nextElementSibling as HTMLElement;
+                if (sibling) {
+                  sibling.style.display = 'flex';
+                }
               }}
             />
             <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center" style={{ display: 'none' }}>
