@@ -3,6 +3,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Star, Quote } from 'lucide-react'
+import { trackEngagement } from '@/lib/analytics'
 
 interface TestimonialProps {
   name: string
@@ -11,6 +12,7 @@ interface TestimonialProps {
   content: string
   rating: number
   delay: number
+  index?: number
 }
 
 const Testimonial: React.FC<TestimonialProps> = ({ 
@@ -19,16 +21,29 @@ const Testimonial: React.FC<TestimonialProps> = ({
   avatar, 
   content, 
   rating, 
-  delay 
+  delay,
+  index = 0
 }) => {
+  const handleTestimonialView = () => {
+    trackEngagement.testimonialView(index, name)
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay }}
+      whileInView={{ 
+        opacity: 1, 
+        y: 0,
+        transition: {
+          duration: 0.6, 
+          delay,
+          onComplete: () => handleTestimonialView()
+        }
+      }}
       viewport={{ once: true }}
       whileHover={{ y: -10, scale: 1.02 }}
       className="glass-effect rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300"
+      onClick={handleTestimonialView}
     >
       <div className="space-y-6">
         {/* Quote Icon */}
@@ -162,7 +177,7 @@ const TestimonialsSection: React.FC = () => {
         {/* Testimonials Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {testimonials.map((testimonial, index) => (
-            <Testimonial key={index} {...testimonial} />
+            <Testimonial key={index} {...testimonial} index={index} />
           ))}
         </div>
 

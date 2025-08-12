@@ -3,28 +3,43 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Shield, Heart, Star } from 'lucide-react'
+import { trackEngagement } from '@/lib/analytics'
 
 interface FeatureCardProps {
   icon: React.ReactNode
   title: string
   description: string
   delay: number
+  index?: number
 }
 
 const FeatureCard: React.FC<FeatureCardProps> = ({ 
   icon, 
   title, 
   description, 
-  delay 
+  delay,
+  index = 0
 }) => {
+  const handleFeatureView = () => {
+    trackEngagement.featureView(title, index)
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay }}
+      whileInView={{ 
+        opacity: 1, 
+        y: 0,
+        transition: {
+          duration: 0.6, 
+          delay,
+          onComplete: () => handleFeatureView()
+        }
+      }}
       viewport={{ once: true }}
       whileHover={{ y: -10, scale: 1.02 }}
-      className="glass-effect rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300"
+      className="glass-effect rounded-2xl p-8 backdrop-blur-xl border border-white/10 hover:border-white/20 transition-all duration-300 cursor-pointer"
+      onClick={handleFeatureView}
     >
       <div className="text-center space-y-6">
         {/* Icon */}
@@ -93,7 +108,7 @@ const FeaturesSection: React.FC = () => {
         {/* Features Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-16">
           {features.map((feature, index) => (
-            <FeatureCard key={index} {...feature} />
+            <FeatureCard key={index} {...feature} index={index} />
           ))}
         </div>
 

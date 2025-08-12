@@ -1,8 +1,9 @@
 "use client"
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Check, Star, Zap, Crown, Shield } from 'lucide-react'
+import { trackEngagement, trackFunnel } from '@/lib/analytics'
 
 interface PlanData {
   name: string
@@ -76,7 +77,15 @@ const PricingPlan: React.FC<PricingPlanProps> = ({
 
         {/* CTA Button - always at bottom */}
         <button 
-          onClick={() => onSelect({ name, price, period, description, features, popular, delay })}
+          onClick={() => {
+            // Extract price as number for tracking
+            const priceNumber = parseFloat(price.replace(/[^\d]/g, ''))
+            const discount = name === 'Годовая подписка' ? 33 : 0
+            
+            trackEngagement.planSelect(name, priceNumber, discount)
+            trackEngagement.pricingCtaClick(name, priceNumber)
+            onSelect({ name, price, period, description, features, popular, delay })
+          }}
           className={`w-full py-3 px-6 rounded-full font-semibold transition-all duration-300 ${
             popular 
               ? 'btn-primary' 
@@ -90,6 +99,28 @@ const PricingPlan: React.FC<PricingPlanProps> = ({
 }
 
 const PricingSection: React.FC = () => {
+  // Track pricing view when component is in viewport
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            trackFunnel.pricingView()
+            observer.disconnect() // Track only once
+          }
+        })
+      },
+      { threshold: 0.5 }
+    )
+
+    const element = document.getElementById('pricing-section')
+    if (element) {
+      observer.observe(element)
+    }
+
+    return () => observer.disconnect()
+  }, [])
+
   const handlePlanSelect = (plan: PlanData) => {
     window.location.href = '/billing'
   }
@@ -140,7 +171,7 @@ const PricingSection: React.FC = () => {
   ]
 
   return (
-    <section className="section-padding bg-surface relative overflow-hidden">
+    <section id="pricing-section" className="section-padding bg-surface relative overflow-hidden">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute top-1/4 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>

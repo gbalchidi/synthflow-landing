@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import UmamiScript from '@/components/Analytics/UmamiScript'
+import AnalyticsProvider from '@/components/Analytics/AnalyticsProvider'
 
 export const metadata: Metadata = {
   title: 'SynthFlow - Создавайте музыку из фотографий за 60 секунд',
@@ -21,7 +23,10 @@ export default function RootLayout({
   return (
     <html lang="ru">
       <body className="antialiased">
-        {children}
+        <UmamiScript />
+        <AnalyticsProvider>
+          {children}
+        </AnalyticsProvider>
       </body>
     </html>
   )

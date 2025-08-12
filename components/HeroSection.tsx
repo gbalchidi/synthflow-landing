@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ArrowRight, Music, Camera, Sparkles } from 'lucide-react'
+import { trackEngagement } from '@/lib/analytics'
 const HeroSection: React.FC = () => {
   const [waveHeights, setWaveHeights] = useState<number[]>([])
 
@@ -12,6 +13,7 @@ const HeroSection: React.FC = () => {
   }, [])
 
   const handleCTAClick = () => {
+    trackEngagement.heroCtaClick()
     window.location.href = '/billing'
   }
 

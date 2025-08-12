@@ -8,6 +8,7 @@ import BillingForm from './BillingForm'
 import ProcessingAnimation from './ProcessingAnimation'
 import EarlyAccessReveal from './EarlyAccessReveal'
 import { BillingFlowState, Plan } from './types'
+import { trackConversion, trackFunnel } from '@/lib/analytics'
 
 export default function BillingFlow() {
   const [state, setState] = useState<BillingFlowState>({
@@ -22,13 +23,17 @@ export default function BillingFlow() {
     }
   })
 
-  // Предупреждение в консоли для разработчиков
+  // Трекинг начала биллинга и предупреждение в консоли
   useEffect(() => {
     console.warn(
       '%c⚠️ ВНИМАНИЕ: Это эмуляция биллинга. ' +
       'Реальные платежные данные НЕ обрабатываются!',
       'color: red; font-size: 16px; font-weight: bold;'
     )
+    
+    // Track billing start
+    trackFunnel.billingStart()
+    trackConversion.billingStart('trial', 0) // Default to trial plan
   }, [])
 
   const handleStepChange = (newStep: BillingFlowState['step'], data?: any) => {
@@ -46,20 +51,36 @@ export default function BillingFlow() {
   }
 
   const handlePlanSelect = (plan: Plan) => {
+    // Get plan price for tracking
+    const planPrices = { trial: 0, monthly: 1990, yearly: 1330 }
+    const price = planPrices[plan] || 0
+    
     setState(prev => ({ ...prev, selectedPlan: plan }))
+    trackConversion.billingStart(plan, price)
     handleStepChange('register')
   }
 
   const handleRegistrationComplete = (userData: { name: string; email: string }) => {
     setState(prev => ({ ...prev, userData }))
+    trackConversion.registrationComplete(userData.email, state.selectedPlan)
+    trackFunnel.registration()
     handleStepChange('billing')
   }
 
   const handleBillingComplete = () => {
+    const planPrices = { trial: 0, monthly: 1990, yearly: 1330 }
+    const price = planPrices[state.selectedPlan] || 0
+    
+    // Track payment initiation
+    trackConversion.paymentInitiated(state.selectedPlan, price, 'card')
+    
     handleStepChange('processing')
     
     // Имитируем обработку платежа
     setTimeout(() => {
+      // Track successful payment
+      trackConversion.paymentSuccess(state.selectedPlan, price, 'demo-transaction-' + Date.now())
+      trackFunnel.payment()
       handleStepChange('reveal')
     }, 3500)
   }

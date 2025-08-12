@@ -3,6 +3,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { Music } from 'lucide-react'
+import { trackEngagement } from '@/lib/analytics'
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear()
@@ -44,7 +45,10 @@ const Footer: React.FC = () => {
               placeholder="Ваш email"
               className="flex-1 px-4 py-3 rounded-full bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-primary/50 transition-colors"
             />
-            <button className="btn-primary px-8 py-3 whitespace-nowrap">
+            <button 
+              onClick={() => trackEngagement.contactClick('newsletter')}
+              className="btn-primary px-8 py-3 whitespace-nowrap"
+            >
               Подписаться
             </button>
           </div>
@@ -53,8 +57,20 @@ const Footer: React.FC = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-white/10 text-center">
           <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-sm mb-4">
-            <a href="/terms" className="text-white/60 hover:text-white transition-colors">Условия использования</a>
-            <a href="/privacy" className="text-white/60 hover:text-white transition-colors">Политика конфиденциальности</a>
+            <a 
+              href="/terms" 
+              onClick={() => trackEngagement.footerLinkClick('terms', '/terms')}
+              className="text-white/60 hover:text-white transition-colors"
+            >
+              Условия использования
+            </a>
+            <a 
+              href="/privacy" 
+              onClick={() => trackEngagement.footerLinkClick('privacy', '/privacy')}
+              className="text-white/60 hover:text-white transition-colors"
+            >
+              Политика конфиденциальности
+            </a>
           </div>
           <div className="text-white/60 text-sm">
             © {currentYear} SynthFlow. Все права защищены.
