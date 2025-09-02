@@ -49,8 +49,8 @@ export const trackEvent = (eventName: string, data?: EventData): void => {
 
   // Remove undefined values
   Object.keys(enrichedData).forEach(key => {
-    if (enrichedData[key] === undefined) {
-      delete enrichedData[key];
+    if ((enrichedData as any)[key] === undefined) {
+      delete (enrichedData as any)[key];
     }
   });
 
