@@ -7,11 +7,15 @@ declare global {
       track: (event?: string | object, data?: object) => void;
       identify: (id?: string | object, data?: object) => void;
     };
+    ym: (counterId: number, action: string, ...params: any[]) => void;
   }
 }
 
 // UTM parameters storage
 export const UTM_STORAGE_KEY = 'synthflow_utm_params';
+
+// Yandex Metrika counter ID
+export const YM_COUNTER_ID = 104023076;
 
 export interface UTMParams {
   utm_source?: string;
@@ -33,13 +37,13 @@ export const isUmamiLoaded = (): boolean => {
   return typeof window !== 'undefined' && window.umami !== undefined;
 };
 
+// Check if Yandex Metrika is loaded
+export const isYandexMetrikaLoaded = (): boolean => {
+  return typeof window !== 'undefined' && window.ym !== undefined;
+};
+
 // Track custom event
 export const trackEvent = (eventName: string, data?: EventData): void => {
-  if (!isUmamiLoaded()) {
-    console.warn('Umami not loaded, event not tracked:', eventName);
-    return;
-  }
-
   // Add UTM params to event data
   const utmParams = getStoredUTMParams();
   const enrichedData = {
@@ -54,8 +58,25 @@ export const trackEvent = (eventName: string, data?: EventData): void => {
     }
   });
 
-  window.umami.track(eventName, enrichedData);
-  console.log('Event tracked:', eventName, enrichedData);
+  // Track in Umami
+  if (isUmamiLoaded()) {
+    window.umami.track(eventName, enrichedData);
+    console.log('Umami event tracked:', eventName, enrichedData);
+  } else {
+    console.warn('Umami not loaded, event not tracked:', eventName);
+  }
+
+  // Track in Yandex Metrika
+  if (isYandexMetrikaLoaded()) {
+    try {
+      window.ym(YM_COUNTER_ID, 'reachGoal', eventName, enrichedData);
+      console.log('YM event tracked:', eventName, enrichedData);
+    } catch (error) {
+      console.error('Error tracking YM event:', error);
+    }
+  } else {
+    console.warn('Yandex Metrika not loaded, event not tracked:', eventName);
+  }
 };
 
 // Track page view with custom data
@@ -120,6 +141,65 @@ export const getStoredUTMParams = (): UTMParams => {
   }
 };
 
+// Yandex Metrika E-commerce tracking
+export const trackYMEcommerce = {
+  // Track product view
+  productView: (productId: string, name: string, price: number, category?: string) => {
+    if (isYandexMetrikaLoaded()) {
+      window.ym(YM_COUNTER_ID, 'reachGoal', 'PRODUCT_VIEW', {
+        ecommerce: {
+          currencyCode: 'RUB',
+          detail: {
+            products: [{
+              id: productId,
+              name: name,
+              price: price,
+              category: category || 'Subscription'
+            }]
+          }
+        }
+      });
+    }
+  },
+
+  // Track add to cart
+  addToCart: (productId: string, name: string, price: number, quantity: number = 1) => {
+    if (isYandexMetrikaLoaded()) {
+      window.ym(YM_COUNTER_ID, 'reachGoal', 'ADD_TO_CART', {
+        ecommerce: {
+          currencyCode: 'RUB',
+          add: {
+            products: [{
+              id: productId,
+              name: name,
+              price: price,
+              quantity: quantity
+            }]
+          }
+        }
+      });
+    }
+  },
+
+  // Track purchase
+  purchase: (orderId: string, products: Array<{id: string, name: string, price: number, quantity: number}>, total: number) => {
+    if (isYandexMetrikaLoaded()) {
+      window.ym(YM_COUNTER_ID, 'reachGoal', 'PURCHASE', {
+        ecommerce: {
+          currencyCode: 'RUB',
+          purchase: {
+            actionField: {
+              id: orderId,
+              revenue: total
+            },
+            products: products
+          }
+        }
+      });
+    }
+  }
+};
+
 // Conversion tracking functions
 export const trackConversion = {
   // Billing flow events
@@ -128,6 +208,8 @@ export const trackConversion = {
       plan_name: planName,
       price: price,
     });
+    // Also track as product view in YM
+    trackYMEcommerce.productView(planName.toLowerCase(), planName, price, 'Subscription');
   },
 
   registrationComplete: (email: string, planName: string) => {
@@ -144,6 +226,8 @@ export const trackConversion = {
       price: price,
       payment_method: paymentMethod,
     });
+    // Also track as add to cart in YM
+    trackYMEcommerce.addToCart(planName.toLowerCase(), planName, price);
   },
 
   paymentSuccess: (planName: string, price: number, transactionId?: string) => {
@@ -152,6 +236,12 @@ export const trackConversion = {
       price: price,
       transaction_id: transactionId || 'unknown',
     });
+    // Also track as purchase in YM
+    trackYMEcommerce.purchase(
+      transactionId || `order_${Date.now()}`,
+      [{id: planName.toLowerCase(), name: planName, price: price, quantity: 1}],
+      price
+    );
   },
 
   paymentFailed: (planName: string, errorType: string) => {
