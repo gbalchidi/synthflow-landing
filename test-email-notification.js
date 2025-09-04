@@ -70,14 +70,15 @@ async function testEmailNotification() {
   }
   
   console.log('\n🎉 Test completed!')
-  console.log('\n⚠️  Note: To receive actual emails via UniSender, you need to:')
-  console.log('1. Sign up for UniSender at https://unisender.com')
-  console.log('2. Get your API key from https://cp.unisender.com/ru/v5/settings/api')
-  console.log('3. Add your API key to .env.local: UNISENDER_API_KEY=your_key')
-  console.log('4. Verify sender email in UniSender dashboard (Settings → Email addresses)')
-  console.log('5. Add sender email to .env.local: UNISENDER_SENDER_EMAIL=your@email.ru')
-  console.log('\n📍 UniSender хранит данные в РФ согласно требованиям 152-ФЗ')
-  console.log('📧 Emails will be sent directly to glebbalchidi@gmail.com')
+  console.log('\n⚠️  Note: To receive actual emails via Gmail SMTP, you need to:')
+  console.log('1. Enable 2-Step Verification in your Google Account')
+  console.log('2. Generate an App Password:')
+  console.log('   - Go to https://myaccount.google.com/apppasswords')
+  console.log('   - Select "Mail" and generate password')
+  console.log('3. Add to .env.local:')
+  console.log('   SMTP_USER=your_gmail@gmail.com')
+  console.log('   SMTP_PASS=your_16_character_app_password')
+  console.log('\n📧 Emails will be sent to glebbalchidi@gmail.com')
 }
 
 testEmailNotification()

@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import axios from 'axios'
+import nodemailer from 'nodemailer'
 
-const UNISENDER_API_KEY = process.env.UNISENDER_API_KEY
-const UNISENDER_API_URL = 'https://api.unisender.com/ru/api'
 const NOTIFICATION_EMAIL = 'glebbalchidi@gmail.com'
-const SENDER_NAME = 'SynthFlow'
-const SENDER_EMAIL = process.env.UNISENDER_SENDER_EMAIL || 'glebbalchidi@gmail.com'
+const SMTP_USER = process.env.SMTP_USER || ''
+const SMTP_PASS = process.env.SMTP_PASS || ''
 
 interface NotificationData {
   type: 'registration' | 'newsletter'
@@ -20,61 +18,20 @@ interface NotificationData {
   }
 }
 
-async function sendEmailViaUnisender(to: string, subject: string, html: string) {
-  if (!UNISENDER_API_KEY) {
-    console.error('UNISENDER_API_KEY is not configured')
+// Create reusable transporter
+const createTransporter = () => {
+  if (!SMTP_USER || !SMTP_PASS) {
+    console.error('SMTP credentials not configured')
     throw new Error('Email service not configured')
   }
 
-  // UniSender requires form-data format
-  const formData = new FormData()
-  formData.append('format', 'json')
-  formData.append('api_key', UNISENDER_API_KEY)
-  formData.append('email', to)
-  formData.append('sender_name', SENDER_NAME)
-  formData.append('sender_email', SENDER_EMAIL)
-  formData.append('subject', subject)
-  formData.append('body', html)
-  formData.append('lang', 'ru')
-
-  try {
-    // Using URL search params as UniSender prefers this format
-    const params = new URLSearchParams()
-    params.append('format', 'json')
-    params.append('api_key', UNISENDER_API_KEY)
-    params.append('email', to)
-    params.append('sender_name', SENDER_NAME)
-    params.append('sender_email', SENDER_EMAIL)
-    params.append('subject', subject)
-    params.append('body', html)
-    params.append('lang', 'ru')
-
-    const response = await axios.post(
-      `${UNISENDER_API_URL}/sendEmail`,
-      params.toString(),
-      {
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-      }
-    )
-
-    console.log('UniSender response:', response.data)
-
-    if (response.data.error) {
-      console.error('UniSender API error:', response.data.error)
-      throw new Error(response.data.error)
+  return nodemailer.createTransporter({
+    service: 'gmail',
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS
     }
-
-    if (response.data.result && response.data.result.email_id) {
-      console.log('Email sent successfully, ID:', response.data.result.email_id)
-    }
-
-    return response.data
-  } catch (error: any) {
-    console.error('UniSender request error:', error.response?.data || error.message)
-    throw error
-  }
+  })
 }
 
 export async function POST(request: NextRequest) {
@@ -240,14 +197,23 @@ export async function POST(request: NextRequest) {
       `
     }
 
-    await sendEmailViaUnisender(NOTIFICATION_EMAIL, subject, htmlContent)
+    // Send email via SMTP
+    const transporter = createTransporter()
+    
+    const info = await transporter.sendMail({
+      from: `"SynthFlow" <${SMTP_USER}>`,
+      to: NOTIFICATION_EMAIL,
+      subject: subject,
+      html: htmlContent
+    })
 
-    return NextResponse.json({ success: true })
+    console.log('Email sent:', info.messageId)
+
+    return NextResponse.json({ success: true, messageId: info.messageId })
   } catch (error: any) {
     console.error('API error:', error)
-    console.error('Error details:', error.response?.data || error.message)
     return NextResponse.json(
-      { error: 'Failed to send notification', details: error.response?.data || error.message },
+      { error: 'Failed to send notification', details: error.message },
       { status: 500 }
     )
   }
