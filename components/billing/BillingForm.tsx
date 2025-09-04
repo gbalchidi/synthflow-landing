@@ -186,7 +186,7 @@ export default function BillingForm({ userData, selectedPlan, onComplete, onBack
     return cardValid && expiryValid && cvvValid && nameValid
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
     if (!isFormValid()) {
@@ -194,6 +194,43 @@ export default function BillingForm({ userData, selectedPlan, onComplete, onBack
     }
 
     setIsProcessing(true)
+    
+    try {
+      // Send notification about payment attempt (NO card data is sent!)
+      const planNames = {
+        'trial': 'Пробный период (7 дней бесплатно)',
+        'monthly': 'Месячная подписка (1,990₽/мес)',
+        'yearly': 'Годовая подписка (15,990₽/год)'
+      }
+
+      // Get UTM params from sessionStorage
+      let utmData = {}
+      if (typeof window !== 'undefined') {
+        const storedUTM = sessionStorage.getItem('synthflow_utm_params')
+        if (storedUTM) {
+          const parsed = JSON.parse(storedUTM)
+          utmData = {
+            source: parsed.utm_source,
+            medium: parsed.utm_medium,
+            campaign: parsed.utm_campaign
+          }
+        }
+      }
+
+      await fetch('/api/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'payment_attempt',
+          name: userData.name,
+          email: userData.email,
+          plan: planNames[selectedPlan],
+          utm: utmData
+        })
+      })
+    } catch (error) {
+      console.error('Failed to send payment notification:', error)
+    }
     
     // Имитируем отправку данных (БЕЗ реальной отправки!)
     setTimeout(() => {

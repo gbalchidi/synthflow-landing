@@ -39,8 +39,41 @@ async function testEmailNotification() {
   
   console.log('\n')
   
-  // Test 2: Newsletter subscription
-  console.log('📧 Test 2: Newsletter subscription')
+  // Test 2: Payment attempt notification
+  console.log('📧 Test 2: Payment attempt notification')
+  try {
+    const paymentResponse = await fetch(`${baseUrl}/api/send-notification`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'payment_attempt',
+        name: 'Иван Иванов',
+        email: 'ivan@example.com',
+        plan: 'Месячная подписка (1,990₽/мес)',
+        utm: {
+          source: 'yandex',
+          medium: 'cpc',
+          campaign: 'promo2024'
+        }
+      })
+    })
+    
+    const result = await paymentResponse.json()
+    
+    if (paymentResponse.ok) {
+      console.log('✅ Payment attempt notification sent successfully')
+      console.log('Response:', result)
+    } else {
+      console.log('❌ Payment attempt notification failed:', result)
+    }
+  } catch (error) {
+    console.log('❌ Payment attempt notification error:', error.message)
+  }
+  
+  console.log('\n')
+  
+  // Test 3: Newsletter subscription
+  console.log('📧 Test 3: Newsletter subscription')
   try {
     const newsletterResponse = await fetch(`${baseUrl}/api/send-notification`, {
       method: 'POST',
