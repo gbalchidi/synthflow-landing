@@ -5,7 +5,8 @@ const UNISENDER_API_KEY = process.env.UNISENDER_API_KEY
 const UNISENDER_API_URL = 'https://api.unisender.com/ru/api'
 const NOTIFICATION_EMAIL = 'glebbalchidi@gmail.com'
 const SENDER_NAME = 'SynthFlow'
-const SENDER_EMAIL = process.env.UNISENDER_SENDER_EMAIL || 'noreply@synthflow.ai'
+// Use the email that registered the UniSender account as fallback
+const SENDER_EMAIL = process.env.UNISENDER_SENDER_EMAIL || 'no-reply@unisender.com'
 
 interface NotificationData {
   type: 'registration' | 'newsletter'
