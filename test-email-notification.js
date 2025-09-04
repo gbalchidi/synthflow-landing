@@ -74,10 +74,10 @@ async function testEmailNotification() {
   console.log('1. Sign up for UniSender at https://unisender.com')
   console.log('2. Get your API key from https://cp.unisender.com/ru/v5/settings/api')
   console.log('3. Add your API key to .env.local: UNISENDER_API_KEY=your_key')
-  console.log('4. Verify sender email in UniSender dashboard')
+  console.log('4. Verify sender email in UniSender dashboard (Settings → Email addresses)')
   console.log('5. Add sender email to .env.local: UNISENDER_SENDER_EMAIL=your@email.ru')
-  console.log('6. Create a contact list in UniSender and update list_id in the API route')
   console.log('\n📍 UniSender хранит данные в РФ согласно требованиям 152-ФЗ')
+  console.log('📧 Emails will be sent directly to glebbalchidi@gmail.com')
 }
 
 testEmailNotification()

@@ -33,7 +33,6 @@ async function sendEmailViaUnisender(to: string, subject: string, html: string) 
     sender_email: SENDER_EMAIL,
     subject: subject,
     body: html,
-    list_id: '1', // You need to create a list in UniSender and use its ID
   })
 
   try {
