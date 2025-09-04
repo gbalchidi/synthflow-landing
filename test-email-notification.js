@@ -111,7 +111,7 @@ async function testEmailNotification() {
   console.log('3. Add to .env.local:')
   console.log('   SMTP_USER=your_gmail@gmail.com')
   console.log('   SMTP_PASS=your_16_character_app_password')
-  console.log('\n📧 Emails will be sent to glebbalchidi@gmail.com')
+  console.log('\n📧 Emails will be sent to: unite@happcore.com and gabalchidi@yandex.ru')
 }
 
 testEmailNotification()

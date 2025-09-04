@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import nodemailer from 'nodemailer'
 
-const NOTIFICATION_EMAIL = 'glebbalchidi@gmail.com'
+const NOTIFICATION_EMAILS = ['unite@happcore.com', 'gabalchidi@yandex.ru']
 const SMTP_USER = process.env.SMTP_USER || ''
 const SMTP_PASS = process.env.SMTP_PASS || ''
 
@@ -278,17 +278,18 @@ export async function POST(request: NextRequest) {
       `
     }
 
-    // Send email via SMTP
+    // Send email via SMTP to multiple recipients
     const transporter = createTransporter()
     
     const info = await transporter.sendMail({
       from: `"SynthFlow" <${SMTP_USER}>`,
-      to: NOTIFICATION_EMAIL,
+      to: NOTIFICATION_EMAILS.join(', '),
       subject: subject,
       html: htmlContent
     })
 
-    console.log('Email sent:', info.messageId)
+    console.log('Emails sent to:', NOTIFICATION_EMAILS.join(', '))
+    console.log('Message ID:', info.messageId)
 
     return NextResponse.json({ success: true, messageId: info.messageId })
   } catch (error: any) {
