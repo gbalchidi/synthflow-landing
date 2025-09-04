@@ -26,19 +26,32 @@ async function sendEmailViaUnisender(to: string, subject: string, html: string) 
     throw new Error('Email service not configured')
   }
 
-  const params = new URLSearchParams({
-    api_key: UNISENDER_API_KEY,
-    email: to,
-    sender_name: SENDER_NAME,
-    sender_email: SENDER_EMAIL,
-    subject: subject,
-    body: html,
-  })
+  // UniSender requires form-data format
+  const formData = new FormData()
+  formData.append('format', 'json')
+  formData.append('api_key', UNISENDER_API_KEY)
+  formData.append('email', to)
+  formData.append('sender_name', SENDER_NAME)
+  formData.append('sender_email', SENDER_EMAIL)
+  formData.append('subject', subject)
+  formData.append('body', html)
+  formData.append('lang', 'ru')
 
   try {
+    // Using URL search params as UniSender prefers this format
+    const params = new URLSearchParams()
+    params.append('format', 'json')
+    params.append('api_key', UNISENDER_API_KEY)
+    params.append('email', to)
+    params.append('sender_name', SENDER_NAME)
+    params.append('sender_email', SENDER_EMAIL)
+    params.append('subject', subject)
+    params.append('body', html)
+    params.append('lang', 'ru')
+
     const response = await axios.post(
-      `${UNISENDER_API_URL}/sendEmail.json`,
-      params,
+      `${UNISENDER_API_URL}/sendEmail`,
+      params.toString(),
       {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
@@ -46,14 +59,20 @@ async function sendEmailViaUnisender(to: string, subject: string, html: string) 
       }
     )
 
+    console.log('UniSender response:', response.data)
+
     if (response.data.error) {
       console.error('UniSender API error:', response.data.error)
       throw new Error(response.data.error)
     }
 
+    if (response.data.result && response.data.result.email_id) {
+      console.log('Email sent successfully, ID:', response.data.result.email_id)
+    }
+
     return response.data
-  } catch (error) {
-    console.error('UniSender request error:', error)
+  } catch (error: any) {
+    console.error('UniSender request error:', error.response?.data || error.message)
     throw error
   }
 }
@@ -224,10 +243,11 @@ export async function POST(request: NextRequest) {
     await sendEmailViaUnisender(NOTIFICATION_EMAIL, subject, htmlContent)
 
     return NextResponse.json({ success: true })
-  } catch (error) {
+  } catch (error: any) {
     console.error('API error:', error)
+    console.error('Error details:', error.response?.data || error.message)
     return NextResponse.json(
-      { error: 'Failed to send notification' },
+      { error: 'Failed to send notification', details: error.response?.data || error.message },
       { status: 500 }
     )
   }
