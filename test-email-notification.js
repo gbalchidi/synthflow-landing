@@ -1,10 +1,10 @@
-// Test script for email notifications
+// Test script for UniSender email notifications
 // Run with: node test-email-notification.js
 
 async function testEmailNotification() {
   const baseUrl = 'http://localhost:3000'
   
-  console.log('🚀 Testing Email Notification API...\n')
+  console.log('🚀 Testing Email Notification API with UniSender...\n')
   
   // Test 1: Registration notification
   console.log('📧 Test 1: Registration notification')
@@ -25,10 +25,13 @@ async function testEmailNotification() {
       })
     })
     
+    const result = await registrationResponse.json()
+    
     if (registrationResponse.ok) {
       console.log('✅ Registration notification sent successfully')
+      console.log('Response:', result)
     } else {
-      console.log('❌ Registration notification failed:', await registrationResponse.text())
+      console.log('❌ Registration notification failed:', result)
     }
   } catch (error) {
     console.log('❌ Registration notification error:', error.message)
@@ -54,22 +57,27 @@ async function testEmailNotification() {
       })
     })
     
+    const result = await newsletterResponse.json()
+    
     if (newsletterResponse.ok) {
       console.log('✅ Newsletter notification sent successfully')
+      console.log('Response:', result)
     } else {
-      console.log('❌ Newsletter notification failed:', await newsletterResponse.text())
+      console.log('❌ Newsletter notification failed:', result)
     }
   } catch (error) {
     console.log('❌ Newsletter notification error:', error.message)
   }
   
   console.log('\n🎉 Test completed!')
-  console.log('\n⚠️  Note: To receive actual emails, you need to:')
-  console.log('1. Sign up for Resend at https://resend.com')
-  console.log('2. Get your API key from https://resend.com/api-keys')
-  console.log('3. Add your API key to .env.local: RESEND_API_KEY=re_YOUR_KEY')
-  console.log('4. Verify your domain in Resend dashboard')
-  console.log('5. Update the "from" email in /app/api/send-notification/route.ts')
+  console.log('\n⚠️  Note: To receive actual emails via UniSender, you need to:')
+  console.log('1. Sign up for UniSender at https://unisender.com')
+  console.log('2. Get your API key from https://cp.unisender.com/ru/v5/settings/api')
+  console.log('3. Add your API key to .env.local: UNISENDER_API_KEY=your_key')
+  console.log('4. Verify sender email in UniSender dashboard')
+  console.log('5. Add sender email to .env.local: UNISENDER_SENDER_EMAIL=your@email.ru')
+  console.log('6. Create a contact list in UniSender and update list_id in the API route')
+  console.log('\n📍 UniSender хранит данные в РФ согласно требованиям 152-ФЗ')
 }
 
 testEmailNotification()
