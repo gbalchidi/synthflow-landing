@@ -25,7 +25,7 @@ const createTransporter = () => {
     throw new Error('Email service not configured')
   }
 
-  return nodemailer.createTransporter({
+  return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: SMTP_USER,
