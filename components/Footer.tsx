@@ -1,12 +1,67 @@
 "use client"
 
-import React from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Music } from 'lucide-react'
 import { trackEngagement } from '@/lib/analytics'
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear()
+  const [email, setEmail] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitMessage, setSubmitMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!email || !email.includes('@')) {
+      setSubmitMessage({ type: 'error', text: 'Введите корректный email' })
+      return
+    }
+
+    setIsSubmitting(true)
+    setSubmitMessage(null)
+
+    try {
+      // Get UTM params from sessionStorage
+      let utmData = {}
+      if (typeof window !== 'undefined') {
+        const storedUTM = sessionStorage.getItem('synthflow_utm_params')
+        if (storedUTM) {
+          const parsed = JSON.parse(storedUTM)
+          utmData = {
+            source: parsed.utm_source,
+            medium: parsed.utm_medium,
+            campaign: parsed.utm_campaign
+          }
+        }
+      }
+
+      const response = await fetch('/api/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'newsletter',
+          email: email.trim(),
+          source: 'footer',
+          utm: utmData
+        })
+      })
+
+      if (response.ok) {
+        setSubmitMessage({ type: 'success', text: 'Спасибо! Вы подписаны на рассылку' })
+        setEmail('')
+        trackEngagement.contactClick('newsletter')
+      } else {
+        setSubmitMessage({ type: 'error', text: 'Произошла ошибка. Попробуйте позже' })
+      }
+    } catch (error) {
+      console.error('Newsletter subscription error:', error)
+      setSubmitMessage({ type: 'error', text: 'Произошла ошибка. Попробуйте позже' })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
     <footer className="bg-surface border-t border-white/10">
@@ -39,19 +94,28 @@ const Footer: React.FC = () => {
           <p className="text-white/70 mb-6">
             Получайте уведомления о новых возможностях и советы по созданию музыки
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+          <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
             <input
               type="email"
               placeholder="Ваш email"
-              className="flex-1 px-4 py-3 rounded-full bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-primary/50 transition-colors"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={isSubmitting}
+              className="flex-1 px-4 py-3 rounded-full bg-white/10 border border-white/20 text-white placeholder-white/50 focus:outline-none focus:border-primary/50 transition-colors disabled:opacity-50"
             />
             <button 
-              onClick={() => trackEngagement.contactClick('newsletter')}
-              className="btn-primary px-8 py-3 whitespace-nowrap"
+              type="submit"
+              disabled={isSubmitting}
+              className="btn-primary px-8 py-3 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Подписаться
+              {isSubmitting ? 'Отправка...' : 'Подписаться'}
             </button>
-          </div>
+          </form>
+          {submitMessage && (
+            <div className={`mt-4 text-sm ${submitMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+              {submitMessage.text}
+            </div>
+          )}
         </motion.div>
 
         {/* Bottom Bar */}

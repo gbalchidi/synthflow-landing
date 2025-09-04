@@ -62,7 +62,44 @@ export default function RegistrationForm({
 
     setIsLoading(true)
 
-    // Имитация проверки email
+    try {
+      // Send notification email
+      const planNames = {
+        'trial': 'Пробный период (7 дней бесплатно)',
+        'monthly': 'Месячная подписка (1,990₽/мес)',
+        'yearly': 'Годовая подписка (1,330₽/мес)'
+      }
+
+      // Get UTM params from sessionStorage
+      let utmData = {}
+      if (typeof window !== 'undefined') {
+        const storedUTM = sessionStorage.getItem('synthflow_utm_params')
+        if (storedUTM) {
+          const parsed = JSON.parse(storedUTM)
+          utmData = {
+            source: parsed.utm_source,
+            medium: parsed.utm_medium,
+            campaign: parsed.utm_campaign
+          }
+        }
+      }
+
+      await fetch('/api/send-notification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'registration',
+          name: formData.name.trim(),
+          email: formData.email.trim(),
+          plan: planNames[selectedPlan],
+          utm: utmData
+        })
+      })
+    } catch (error) {
+      console.error('Failed to send notification:', error)
+    }
+
+    // Continue with registration flow
     setTimeout(() => {
       setIsLoading(false)
       onComplete({
